@@ -1,0 +1,79 @@
+version: '2'
+services:
+  logstash-collector-config:
+    metadata:
+      logstash: &id001
+        inputs: |-
+          syslog {
+              port => 5514
+          }
+        outputs: |-
+          redis {
+            host => "redis.rancher.internal"
+            port => "6379"
+            data_type => "list"
+            key => "logstash"
+          }
+    scale: 3
+    start_on_create: true
+  logstash-collector:
+    metadata:
+      logstash: *id001
+    scale: 3
+    start_on_create: true
+  logstash-indexer:
+    metadata:
+      logstash: &id002
+        filters: "grok {\n        match           => { \"message\" => \"%{SYSLOGTIMESTAMP}\
+          \ %{SYSLOGHOST:host} %{DATA:program}(?:\\[%{POSINT}\\])?: %{GREEDYDATA:message}\"\
+          \ }\n        overwrite       => [ \"message\", \"host\" ]\n        tag_on_failure\
+          \  => [\"_syslog_preprocess_fail\"]\n        add_tag         => [\"_syslog_preprocess\"\
+          ]\n    } \nif [type] == \"CEF\" {\n    # Manipulate the message\n    mutate\
+          \ {\n         # Saved the original message into a temporary field\n    \
+          \     add_field => { \"tmp_message\" => \"%{message}\" }\n         # splits\
+          \ message on the \"|\"  and has index numbers\n         split => [\"message\"\
+          , \"|\"]\n         # generate fields for the CEF header\n         add_field\
+          \ => { \"cef_version\" => \"%{message[0]}\" }\n         add_field => { \"\
+          cef_device_vendor\" => \"%{message[1]}\" }\n         add_field => { \"cef_device_product\"\
+          \ => \"%{message[2]}\" }\n         add_field => { \"cef_device_version\"\
+          \ => \"%{message[3]}\" }\n         add_field => { \"cef_sig_id\" => \"%{message[4]}\"\
+          \ }\n         add_field => { \"cef_sig_name\" => \"%{message[5]}\" }\n \
+          \        add_field => { \"cef_sig_severity\" => \"%{message[6]}\" }\n  \
+          \  }\n    # Parse the message with field=value formats\n    kv {\n     \
+          \   # Note: values with spaces are lost (still getting there)\n        \
+          \ field_split => \" \"\n         # Only included the fields which are of\
+          \ interest (dont need everything)\n         include_keys => [\"cat\",\"\
+          act\",\"proto\",\"dst\",\"dpt\",\"src\",\"spt\"]\n    }\n    mutate {\n\
+          \        # Rename fields to cef_field_names\n        rename => [ \"cat\"\
+          ,    \"cef_traffic_category\"]\n        rename => [ \"act\",    \"cef_traffic_action\"\
+          ]\n        rename => [ \"proto\",  \"cef_traffic_proto\"]\n        rename\
+          \ => [ \"dst\",    \"cef_traffic_dst_ip\"]\n        rename => [ \"dpt\"\
+          ,    \"cef_traffic_dst_port\"]\n        rename => [ \"src\",    \"cef_traffic_src_ip\"\
+          ]\n        rename => [ \"spt\",    \"cef_traffic_src_port\"]\n        #\
+          \ Revert original message and remove temporary field\n        replace =>\
+          \ { \"message\" => \"%{tmp_message}\" }\n        remove_field => [ \"tmp_message\"\
+          \ ]\n    }\n  }\n"
+        inputs: |
+          redis {
+            host => "redis.rancher.internal"
+            port => "6379"
+            data_type => "list"
+            key => "logstash"
+          }
+        outputs: |
+          elasticsearch {
+            hosts => ["elasticsearch.rancher.internal:9200"]
+          }
+          stdout {
+            codec => rubydebug
+          }
+    scale: 3
+    start_on_create: true
+  redis:
+    scale: 3
+    start_on_create: true
+  logstash-indexer-config:
+    metadata:
+      logstash: *id002
+    scale: 3
+    start_on_create: true
