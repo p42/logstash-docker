@@ -21,23 +21,23 @@ build-master:
   only:
     - master
 
-test-master:
-  tags:
-    - docker
-  stage: test
-  script:
-    - docker run  --rm "${IMAGE_NAME}:${IMAGE_TAG}" /ci_tests/run_tests 
-  only:
-    - master
+#test-master:
+#  tags:
+#    - docker
+#  stage: test
+#  script:
+#    - docker run  --rm "${IMAGE_NAME}:${IMAGE_TAG}" /ci_tests/run_tests 
+#  only:
+#    - master
 
-test:
-  tags:
-    - docker
-  stage: test
-  script:
-    - docker run  --rm "${IMAGE_NAME}:${IMAGE_TAG}" /ci_tests/run_tests 
-  except:
-    - master
+#test:
+#  tags:
+#    - docker
+#  stage: test
+#  script:
+#    - docker run  --rm "${IMAGE_NAME}:${IMAGE_TAG}" /ci_tests/run_tests 
+#  except:
+#    - master
 
 build:
   tags:
