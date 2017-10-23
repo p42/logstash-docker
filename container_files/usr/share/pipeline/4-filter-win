@@ -1,0 +1,8 @@
+filter {
+    if "processed" not in [tags] and "csv" not in [tags]{
+        grok {
+            patterns_dir    => "/usr/share/logstash/patterns"
+            match           => {"message" => "%{LOGLEVEL:level}"}
+        }
+    }
+}

@@ -1,0 +1,24 @@
+QUERY [\w\d\W]+
+
+ODIE_TYPE (OutboundConnectionResponse|OutboundConnectionCommand)
+
+ODIEWEBLOG %{DATESTAMP_FULL:date} %{IP:sender_ip} %{HTTP_METHOD:method} %{URIPATH:cs_stem} %{QUERY:cs_uri_query} %{POSINT:s_port} - %{IP:client_ip} %{GREEDYDATA:useragent}(?:<TP>%{URI:referer}</TP>)? %{NONNEGINT:sc_status} %{NONNEGINT:sc_sub_status} %{NONNEGINT:sc_win32_status} %{NONNEGINT:time_taken}
+
+# This is the original pattern for ODIE_MAIL; log format was updated.
+# Keeping this around as a just-in-case.
+#ODIE_MAIL %{IP:ip}, %{ODIEMAIL:odie_command}, %{DATE_US_FULLYEAR_REV:date}, %{TIME:time}, (?<some_data>[A-Z1-9]*), (?<some_other_data>[A-Z]*), -, (?<some_digit_data>[\d]{,4}), (?<some_digit_data1>[\d]{,4}), (?<some_digit_data2>[\d]{,4}), (?<some_digit_data3>[\d]{,4}), (?<some_digit_data4>[\d]{,4}), (?<other_data>([A-Z]*-)), -,%{GREEDYDATA:log_message}
+
+ODIE_MAIL %{DATESTAMP_FULL:datetime} %{NOTSPACE:s_sitename} %{NOTSPACE:s_comp_name} %{OPTIONAL_IP:s_ip} %{NONNEGINT:s_port} %{NOTSPACE:cs_method} %{NOTSPACE:cs_uri_stem} %{NOTSPACE:cs_uri_query} %{INT:sc_status} %{INT:sc_win32_status} %{INT:time_taken} %{WORD:cs_version} %{NOTSPACE:cs_host} %{NOTSPACE:cs_user_agent}
+
+MESSAGE_SOURCE_VERSION [\d\.]*
+MESSAGE_SOURCE [A-Za-z\.-]*
+SOURCE_AND_VERSION %{MESSAGE_SOURCE:message_source}(?:(?:[\s])?%{MESSAGE_SOURCE_VERSION:message_source_version})?
+
+
+#This still doesn't process multiline event logs - need to figure out how to process the first batch - 
+# There is also a CSV filter plugin that will process these and assign names based on the supplied column names
+# We need to decide how we want to handle all that...
+WIN_APPLICATION_EVENT_LOG %{LOGLEVEL:level},%{DATE_US_FULLYEAR_REV:date} %{TIME:time} (AM|PM),%{SOURCE_VERSION:source_version},%{NONNEGINT:event_code},%{WORDS:task_category},%{GREEDYDATA:log_message}
+
+
+FORTIGATE_LOG %{FORTIDATE:date_time} %{NOTSPACE:device_hostname}%{GREEDYDATA:info_about_machine}%{SOURCEIP:src_ip}.*%{SRCPORT}.*%{DEVICE_IBD_IFACE:device_ibd_iface}.*%{DESTIP:dst_ip}.*%{DSTPRT}.*%{DEVICE_OBD_IFACE:device_obd_iface}.*%{ACTION}.*%{FTG_POLICY_ID:ftg_policy_id:int}.*%{FTG_DST_CTY}.*%{FTG_SRC_CTY}.*%{REQ_APP}.*%{FTG_APP:ftg_app} .*%{OUT_BYTES}.*%{IN_BYTES}

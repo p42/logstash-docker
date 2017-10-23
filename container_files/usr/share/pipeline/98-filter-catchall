@@ -1,0 +1,7 @@
+filter {
+    if "processed" not in [tags] {
+        mutate {
+            add_tag     => ["_process_failure"]
+        }
+    }
+}
