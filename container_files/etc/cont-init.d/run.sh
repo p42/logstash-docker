@@ -1,6 +1,7 @@
-#!/usr/bin/with-contenv /bin/bash
+#!/usr/bin/with-contenv /bin/sh
 
 echo "Directory received is ${1}"
+# DIR="/tmp"
 # $1 is the working directory
 # $2 directory where we'll clone
 # $3 is the repo url
@@ -8,7 +9,7 @@ echo "Directory received is ${1}"
 if [ $# -eq 0 ]; then
     echo "No directory argument supplied. Using current directory."
 elif [ ! -d "$1" ]; then
-    echo "The supplied directory does not exist"
+    echo "The supplied directory ${1} does not exist"
     exit 0
 else
     echo "$1 exists. Changing working directory."
@@ -48,11 +49,11 @@ else
     exit 0
 fi
 
-if [ -d $2/.git ]; then
+if [ -d ${LOGSTASH_DIR}/.git ]; then
     # If the .git repo exists then this is not the first time that this script has run.
     # and our only job is to pull down any changes that might exist from the repo.
-    echo "Git repo exists in ${1}/${2} directory"
-    cd $2
+    echo "Git repo exists in ${LOGSTASH_DIR} directory"
+    cd ${LOGSTASH_DIR}
     git pull origin master
     # git add . --all
     # git commit -m "Nightly Commit for $(date)"
@@ -64,16 +65,16 @@ else
     # 2. Clone the repository down from the provided url.
     # 3. Set up symlinks from the logstash expected location to our repo-provided directories
     #     for config, pipeline, and patterns.
-    echo "No git directory in $(pwd). Assuming this is the first time this script has run. Commencing initialization... "
+    echo "No git directory in ${LOGSTASH_DIR}. Assuming this is the first time this script has run. Commencing initialization... "
 # Stage 2
     if [ ! -z "$LOGSTASH_REPO_GIT_URL" ]; then
         # Repo url no passed through a variable. Check argument 2.
         echo "Repo url passed through a variable."
         echo "${LOGSTASH_REPO_GIT_URL}"
         REPO=$LOGSTASH_REPO_GIT_URL
-    elif [ ! -z "$3" ]; then
+    elif [ ! -z "$2" ]; then
         echo "Repo url passed through argument."
-        REPO=$3
+        REPO=$2
     else
         echo "No git repository supplied, I don't want to assume where this might be so I have to conclude
 that I cannot continue in my efforts to set up this infrastructure."
@@ -81,7 +82,7 @@ that I cannot continue in my efforts to set up this infrastructure."
     fi
 
     echo "git clone ${REPO}"
-    git clone ${REPO} $2
+    git clone ${REPO} ${LOGSTASH_DIR}
     git config --global user.name "Docker Sidekick Container"
     git config --global user.email "bcone+docker_sidekick@esu10.org"
 
