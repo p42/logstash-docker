@@ -6,6 +6,46 @@ echo "Directory received is ${1}"
 # $2 directory where we'll clone
 # $3 is the repo url
 
+# Takes a path, relative or absolute and ensures that it exists
+# Wich means that it creates any directories needed so that the full
+# supplied structure exists upon exit.
+ensure_directory() {
+    DIRECTORY_PATH=$1
+    echo "${DIRECTORY_PATH}"
+    if [ -z DIRECTORY_PATH ]; then
+        echo "No path recevied, nothing to ensure."
+    else
+        IFS="/" read -r -a array <<< "$DIRECTORY_PATH"
+        WD=""
+        # If the first element of the array is a blank space then we know we are were supplied
+        # an absolute path. Set our WD parameter to first be '/'.
+        if [ -z ${array[0]} ]; then
+            echo "An absolute path was supplied."
+            CHANGE="/"
+        else
+            echo "A relative path was supplied"
+        fi
+        # We need to handle the first element of the array intelligently so we don't fail out later in our process.
+        for element in "${array[@]}"
+        do
+            if [ ! -z $element ]; then
+                CHANGE=$CHANGE$element
+                echo "Current working directory is $(pwd)"
+                echo "Testing path argument ${CHANGE}"
+                # We're assuming that an absolute path was supplied.
+                if [ -d $CHANGE ]; then
+                    echo "Directory exists for $(pwd)/${CHANGE}"
+                else
+                    echo "No directory at $(pwd)/${element}. Creating."
+                    mkdir $CHANGE
+                fi
+                cd $CHANGE
+                CHANGE=""
+            fi
+        done
+
+    fi
+}
 if [ $# -eq 0 ]; then
     echo "No directory argument supplied. Using current directory."
 elif [ ! -d "$1" ]; then
@@ -90,3 +130,7 @@ that I cannot continue in my efforts to set up this infrastructure."
     # Based on their documentation, Logstash expexts the configuration files (logstash directory)
     # to exist at /usr/share/
 fi
+
+#Do Rsync stuff to get config, pipeline, and patterns dirs in correct place
+ensure_directory /usr/share/logstash
+rsync -v -r ${LOGSTASH_DIR}/ /usr/share/logstash/
