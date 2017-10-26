@@ -133,4 +133,4 @@ fi
 
 #Do Rsync stuff to get config, pipeline, and patterns dirs in correct place
 ensure_directory /usr/share/logstash
-rsync -v -r ${LOGSTASH_DIR}/ /usr/share/logstash/
+rsync -r ${LOGSTASH_DIR}/ /usr/share/logstash/
