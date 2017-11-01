@@ -21,7 +21,9 @@
 # 4) GIT_REPO_BRANCH - OPTIONAL, defaults to Master Branch you want to checkout.            #
 # 5) DEPLOY_PUB_KEY - REQUIRED, allows placement of pub key.                                #
 # 6) DEPLOY_PRI_KEY_LOCATION - OPTIONAL - defaults to /run/secrets from Rancher config.     #
-# 7) KNOWN_HOSTS - REQUIRED - host identity of the git repo server.
+# 7) KNOWN_HOSTS - REQUIRED - host identity of the git repo server.                         #
+# 8) COPY_SOME_FILES - OPTIONAL                                                             #
+# 9) COPY_SOME_FILES_DST - REQUIRED if setting COPY_SOME_FILES. The destination path        #
 #############################################################################################
 
 # Takes a path, relative or absolute and ensures that it exists
@@ -184,9 +186,17 @@ fi
 
 # Lastly, we need to figure out how to do some additional, LS specific commands w/o always doing them...
 #Do Rsync stuff to get config, pipeline, and patterns dirs in correct place
-if [ ! -z "$LOGSTASH_SPECIFIC_INSTANCE" ]; then
-    echo "This is a logstash specific instantiation that does logstash specific things."
-    ensure_directory /usr/share/logstash
-    echo "rsync ${WORKING_DIR}"
-    rsync -r ${WORKING_DIR}/${GIT_REPO_DIR}/ /usr/share/logstash/
+if [ ! -z "$COPY_SOME_FILES" ]; then
+    echo "I was instructed to copy files based on receiving a non-empty '${COPY_SOME_FILES}' in the variable \"COPY_SOME_FILES\"."
+    if [ ! -z "$COPY_SOME_FILES_DST" ]; then
+        echo "As such, I am copying the contents of ${WORKING_DIR}/${GIT_REPO_DIR} to ${COPY_SOME_FILES_DST}."
+        # echo "This is a logstash specific instantiation that does logstash specific things."
+        ensure_directory $COPY_SOME_FILES_DST
+        echo "rsync -r ${WORKING_DIR}/${GIT_REPO_DIR}/ ${COPY_SOME_FILES_DST}"
+        rsync -r ${WORKING_DIR}/${GIT_REPO_DIR}/ ${COPY_SOME_FILES_DST}
+    else
+        echo "You instructed me to copy some files as detailed above. However, you did not tell me where you wanted"
+        echo "me to place these files. Alas I cannot complete this task and your container will likely not function as"
+        echo "you expect. To ensure proper operation here, be sure to set the \"COPY_SOME_FILES_DST\" variable."
+    fi
 fi
