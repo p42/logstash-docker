@@ -6,7 +6,7 @@ MAINTAINER Brandon Cone - bcone@esu10.org
 COPY container_files /
 
 # I'm not certain we actually need to run anything since we're extending the existing logstash image...Pending test.
-WORKDIR /tmp/logstash
+# WORKDIR /tmp/logstash
 # ENTRYPOINT ["/bin/bash"]
 # RUN logstash-plugin install logstash-output-mqtt
 RUN yum install -y git 

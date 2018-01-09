@@ -15,3 +15,5 @@ At runtime, the run.sh script executes and attempts to clone/pull from a git rep
  7. KNOWN_HOSTS - REQUIRED - host identity of the git repo server.                         
  8. COPY_SOME_FILES - OPTIONAL                                                             
  9. COPY_SOME_FILES_DST - REQUIRED if setting COPY_SOME_FILES. The destination path    
+ 10. TEMPLATE_FILES - OPTIONAL, convert environment variables in the specified, comma-delimited list of config files.
+    * Make sure you also supply the environment variables necessary for these template files.

@@ -155,6 +155,7 @@ fi
 if [ ! -e ~/.ssh/id_rsa.pub ]; then
     echo "Writing Pub Key to .ssh directory."
     echo "$DEPLOY_PUB_KEY" > ~/.ssh/id_rsa.pub
+    chmod 600 ~/.ssh/id_rsa.pub
     echo "Pub key file placed. Prepping to place Private Key"
 fi
 if [ ! -e ~/.ssh/id_rsa ]; then
@@ -184,6 +185,16 @@ else
 
 fi
 
+# Enable running a templater, in this case envplate on the files we downloaded, only if some are specified.
+if [ ! -z "$TEMPLATE_FILES" ]; then
+    # Download and execute envplate to set up the variables in our config files.
+    echo "A list of template files was provided. Downloading envplate to convert them."
+    curl -sLo /usr/local/bin/ep https://github.com/kreuzwerker/envplate/releases/download/v0.0.8/ep-linux
+    chmod +x /usr/local/bin/ep
+
+    ep -v $TEMPLATE_FILES
+fi
+
 # Lastly, we need to figure out how to do some additional, LS specific commands w/o always doing them...
 #Do Rsync stuff to get config, pipeline, and patterns dirs in correct place
 if [ ! -z "$COPY_SOME_FILES" ]; then
@@ -191,7 +202,8 @@ if [ ! -z "$COPY_SOME_FILES" ]; then
     if [ ! -z "$COPY_SOME_FILES_DST" ]; then
         echo "As such, I am copying the contents of ${WORKING_DIR}/${GIT_REPO_DIR} to ${COPY_SOME_FILES_DST}."
         # echo "This is a logstash specific instantiation that does logstash specific things."
-        ensure_directory $COPY_SOME_FILES_DST
+        mkdir -p $COPY_SOME_FILES_DST
+        # ensure_directory $COPY_SOME_FILES_DST
         echo "rsync -r ${WORKING_DIR}/${GIT_REPO_DIR}/ ${COPY_SOME_FILES_DST}"
         rsync -r ${WORKING_DIR}/${GIT_REPO_DIR}/ ${COPY_SOME_FILES_DST}
     else
