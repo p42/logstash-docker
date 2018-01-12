@@ -185,16 +185,6 @@ else
 
 fi
 
-# Enable running a templater, in this case envplate on the files we downloaded, only if some are specified.
-if [ ! -z "$TEMPLATE_FILES" ]; then
-    # Download and execute envplate to set up the variables in our config files.
-    echo "A list of template files was provided. Downloading envplate to convert them."
-    curl -sLo /usr/local/bin/ep https://github.com/kreuzwerker/envplate/releases/download/v0.0.8/ep-linux
-    chmod +x /usr/local/bin/ep
-
-    ep -v $TEMPLATE_FILES
-fi
-
 # Lastly, we need to figure out how to do some additional, LS specific commands w/o always doing them...
 #Do Rsync stuff to get config, pipeline, and patterns dirs in correct place
 if [ ! -z "$COPY_SOME_FILES" ]; then
@@ -211,4 +201,16 @@ if [ ! -z "$COPY_SOME_FILES" ]; then
         echo "me to place these files. Alas I cannot complete this task and your container will likely not function as"
         echo "you expect. To ensure proper operation here, be sure to set the \"COPY_SOME_FILES_DST\" variable."
     fi
+fi
+
+# Enable running a templater, in this case envplate on the files we downloaded, only if some are specified.
+# We want to run it here and we expect the FINAL path of the files to be passed in.
+# Otherwise they will show as changes in the git repo and prevent subsequent pulls.
+if [ ! -z "$TEMPLATE_FILES" ]; then
+    # Download and execute envplate to set up the variables in our config files.
+    echo "A list of template files was provided. Downloading envplate to convert them."
+    curl -sLo /usr/local/bin/ep https://github.com/kreuzwerker/envplate/releases/download/v0.0.8/ep-linux
+    chmod +x /usr/local/bin/ep
+
+    ep -v $TEMPLATE_FILES
 fi
